@@ -19,6 +19,9 @@ import (
 
 const (
 	apiPathValidateNetworkingIngress = "/validate-networking-v1-ingress"
+	lbAttrsDeletionProtectionEnabled = "deletion_protection.enabled"
+	schemDefault                     = "internal"
+	defaultIngressClass              = "alb"
 )
 
 // NewIngressValidator returns a validator for Ingress API.
@@ -74,7 +77,62 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	if err := v.checkIngressClassUsage(ctx, ing, oldIng); err != nil {
 		return err
 	}
+	if err := v.validateDeletionProtectionAnnotation(ctx, ing, oldIng); err != nil {
+		return err
+	}
 	return nil
+}
+
+func (v *ingressValidator) validateDeletionProtectionAnnotation(ctx context.Context, ing *networking.Ingress, oldIng *networking.Ingress) error {
+	// Get the values of the "alb.ingress.kubernetes.io/scheme" and "alb.ingress.kubernetes.io/ingress.class" annotations for the old and new Ingress objects
+	ingClass := defaultIngressClass
+	oldIngClass := defaultIngressClass
+
+	if value, ok := ing.Annotations[annotations.IngressClass]; ok {
+		ingClass = value
+	}
+
+	if value, ok := oldIng.Annotations[annotations.IngressClass]; ok {
+		oldIngClass = value
+	}
+
+	rawSchemaold := ""
+	rawSchema := ""
+
+	if exists := v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchemaold, oldIng.Annotations); !exists {
+		rawSchemaold = schemDefault
+	}
+
+	if exists := v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchema, ing.Annotations); !exists {
+		rawSchema = schemDefault
+	}
+
+	// Check if the scheme or type of the load balancer changed in the new Ingress object
+	if rawSchemaold != rawSchema || ingClass != oldIngClass {
+		// Check if the Ingress object had the deletion protection annotation enabled
+		enabled, err := v.getDeletionProtectionEnabled(ing)
+		if err != nil {
+			return err
+		}
+		if enabled == "true" {
+			return errors.Errorf("cannot change the scheme or type of ingress %s/%s with deletion protection enabled", ing.Namespace, ing.Name)
+		}
+	}
+	return nil
+}
+
+// getDeletionProtectionEnabled extracts the value of the "deletion_protection.enabled" attribute from the "alb.ingress.kubernetes.io/load-balancer-attributes" annotation of the given Ingress object.
+// If the annotation or the attribute is not present, it returns an empty string.
+func (v *ingressValidator) getDeletionProtectionEnabled(ing *networking.Ingress) (string, error) {
+	var lbAttributes map[string]string
+
+	_, err := v.annotationParser.ParseStringMapAnnotation(annotations.IngressSuffixLoadBalancerAttributes, &lbAttributes, ing.Annotations)
+	if err != nil {
+		return "", err
+	}
+
+	return lbAttributes[lbAttrsDeletionProtectionEnabled], nil
+
 }
 
 func (v *ingressValidator) ValidateDelete(ctx context.Context, obj runtime.Object) error {
