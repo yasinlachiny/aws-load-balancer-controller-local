@@ -2,7 +2,10 @@ package networking
 
 import (
 	"context"
+	elbv2sdk "github.com/aws/aws-sdk-go/service/elbv2"
+	"sigs.k8s.io/aws-load-balancer-controller/pkg/aws/services"
 
+        "fmt"
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
@@ -22,7 +25,7 @@ const (
 )
 
 // NewIngressValidator returns a validator for Ingress API.
-func NewIngressValidator(client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
+func NewIngressValidator(elbv2Client services.ELBV2,client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
 	return &ingressValidator{
 		annotationParser:              annotations.NewSuffixAnnotationParser(annotations.AnnotationPrefixIngress),
 		classAnnotationMatcher:        ingress.NewDefaultClassAnnotationMatcher(ingConfig.IngressClass),
@@ -30,18 +33,21 @@ func NewIngressValidator(client client.Client, ingConfig config.IngressConfig, l
 		disableIngressClassAnnotation: ingConfig.DisableIngressClassAnnotation,
 		disableIngressGroupAnnotation: ingConfig.DisableIngressGroupNameAnnotation,
 		logger:                        logger,
+                elbv2Client:          elbv2Client,
 	}
 }
 
 var _ webhook.Validator = &ingressValidator{}
 
 type ingressValidator struct {
+        elbv2Client           services.ELBV2
 	annotationParser              annotations.Parser
 	classAnnotationMatcher        ingress.ClassAnnotationMatcher
 	classLoader                   ingress.ClassLoader
 	disableIngressClassAnnotation bool
 	disableIngressGroupAnnotation bool
 	logger                        logr.Logger
+
 }
 
 func (v *ingressValidator) Prototype(req admission.Request) (runtime.Object, error) {
@@ -62,6 +68,26 @@ func (v *ingressValidator) ValidateCreate(ctx context.Context, obj runtime.Objec
 	return nil
 }
 
+
+type defaultLoadBalancerManager struct {
+	elbv2Client services.ELBV2
+	logger      logr.Logger
+}
+
+func (m *defaultLoadBalancerManager) FindLoadBalancerByDNSName(ctx context.Context, dnsName string) (string, error) {
+	req := &elbv2sdk.DescribeLoadBalancersInput{}
+	lbs, err := m.elbv2Client.DescribeLoadBalancersAsList(ctx, req)
+	if err != nil {
+		return "", err
+	}
+	for _, lb := range lbs {
+		if awssdk.StringValue(lb.DNSName) == dnsName {
+			return awssdk.StringValue(lb.LoadBalancerArn), nil
+		}
+	}
+	return "", errors.Errorf("couldn't find LoadBalancer with dnsName: %v", dnsName)
+}
+
 func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Object, oldObj runtime.Object) error {
 	ing := obj.(*networking.Ingress)
 	oldIng := oldObj.(*networking.Ingress)
@@ -74,6 +100,58 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	if err := v.checkIngressClassUsage(ctx, ing, oldIng); err != nil {
 		return err
 	}
+        fmt.Print("testwetwetwsdfsdf123123123")
+	req := &elbv2sdk.DescribeLoadBalancersInput{}
+	lbs, err := v.elbv2Client.DescribeLoadBalancersAsList(ctx, req)
+        fmt.Println(lbs)
+        fmt.Println(err)
+
+//	lbs, err := v.DescribeLoadBalancersPagesWithContext(ctx,req)
+//	if err != nil {
+//		fmt.Println( err)
+//	}
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123111111111111111111111111111111111111111111111111")
+
+        //sdkLBs, err := findSDKLoadBalancers(ctx)
+//        fmt.Println(ctx)
+//	var result []*elbv2sdk.Listener
+
+//        if err := v.elbv2Client.DescribeLoadBalancersPagesWithContext(ctx , req,func(output *elbv2sdk.DescribeLoadBalancersOutput, _ bool) bool {
+//		fmt.Print(output)
+//		return true
+
+//	}); err != nil {
+//		fmt.Print("133333333333332222222222222222222222222222222222222222222222222222")
+//	}
+//	return result, nil
+
+//	if err := c.DescribeListenersPagesWithContext(ctx, input, func(output *elbv2.DescribeListenersOutput, _ bool) bool {
+//		result = append(result, output.Listeners...)
+//		return true
+//	}); err != nil {
+//		return nil, err
+//	}
+//	return result, nil
+
+
+
+
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+        fmt.Print("testwetwetwsdfsdf123123123")
+
 	return nil
 }
 
