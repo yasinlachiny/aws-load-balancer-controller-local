@@ -2,12 +2,14 @@ package networking
 
 import (
 	"context"
+	"fmt"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/annotations"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/config"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/ingress"
@@ -22,7 +24,7 @@ const (
 )
 
 // NewIngressValidator returns a validator for Ingress API.
-func NewIngressValidator(client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
+func NewIngressValidator(eventRecorder record.EventRecorder, client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
 	return &ingressValidator{
 		annotationParser:              annotations.NewSuffixAnnotationParser(annotations.AnnotationPrefixIngress),
 		classAnnotationMatcher:        ingress.NewDefaultClassAnnotationMatcher(ingConfig.IngressClass),
@@ -36,6 +38,7 @@ func NewIngressValidator(client client.Client, ingConfig config.IngressConfig, l
 var _ webhook.Validator = &ingressValidator{}
 
 type ingressValidator struct {
+	eventRecorder                 record.EventRecorder
 	annotationParser              annotations.Parser
 	classAnnotationMatcher        ingress.ClassAnnotationMatcher
 	classLoader                   ingress.ClassLoader
@@ -74,6 +77,17 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	if err := v.checkIngressClassUsage(ctx, ing, oldIng); err != nil {
 		return err
 	}
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println("heloo worlddddd")
+	fmt.Println(v.eventRecorder)
+	fmt.Println("heloo worlddddd")
+
 	return nil
 }
 

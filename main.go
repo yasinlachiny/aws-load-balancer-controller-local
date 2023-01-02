@@ -153,7 +153,7 @@ func main() {
 	corewebhook.NewPodMutator(podReadinessGateInjector).SetupWithManager(mgr)
 	elbv2webhook.NewTargetGroupBindingMutator(cloud.ELBV2(), ctrl.Log).SetupWithManager(mgr)
 	elbv2webhook.NewTargetGroupBindingValidator(mgr.GetClient(), cloud.ELBV2(), ctrl.Log).SetupWithManager(mgr)
-	networkingwebhook.NewIngressValidator(mgr.GetClient(), controllerCFG.IngressConfig, ctrl.Log).SetupWithManager(mgr)
+	networkingwebhook.NewIngressValidator(mgr.GetEventRecorderFor("service"), mgr.GetClient(), controllerCFG.IngressConfig, ctrl.Log).SetupWithManager(mgr)
 	//+kubebuilder:scaffold:builder
 
 	go func() {
