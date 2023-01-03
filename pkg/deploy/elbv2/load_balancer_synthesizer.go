@@ -196,3 +196,13 @@ func isSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elb
 	}
 	return false
 }
+
+func IsSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elbv2model.LoadBalancer) bool {
+	if string(resLB.Spec.Type) != awssdk.StringValue(sdkLB.LoadBalancer.Type) {
+		return true
+	}
+	if resLB.Spec.Scheme != nil && string(*resLB.Spec.Scheme) != awssdk.StringValue(sdkLB.LoadBalancer.Scheme) {
+		return true
+	}
+	return false
+}

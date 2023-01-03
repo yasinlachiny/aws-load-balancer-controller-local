@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -100,6 +101,21 @@ func (r *serviceReconciler) reconcile(ctx context.Context, req ctrl.Request) err
 		return r.cleanupLoadBalancerResources(ctx, svc, stack)
 	}
 	return r.reconcileLoadBalancerResources(ctx, svc, stack, lb)
+}
+
+func (r *serviceReconciler) BuildModel(ctx context.Context, svc *corev1.Service) (core.Stack, *elbv2model.LoadBalancer, error) {
+	stack, lb, err := r.modelBuilder.Build(ctx, svc)
+	if err != nil {
+		r.eventRecorder.Event(svc, corev1.EventTypeWarning, k8s.ServiceEventReasonFailedBuildModel, fmt.Sprintf("Failed build model due to %v", err))
+		return nil, nil, err
+	}
+	stackJSON, err := r.stackMarshaller.Marshal(stack)
+	if err != nil {
+		r.eventRecorder.Event(svc, corev1.EventTypeWarning, k8s.ServiceEventReasonFailedBuildModel, fmt.Sprintf("Failed build model due to %v", err))
+		return nil, nil, err
+	}
+	r.logger.Info("successfully built model", "model", stackJSON)
+	return stack, lb, nil
 }
 
 func (r *serviceReconciler) buildModel(ctx context.Context, svc *corev1.Service) (core.Stack, *elbv2model.LoadBalancer, error) {
