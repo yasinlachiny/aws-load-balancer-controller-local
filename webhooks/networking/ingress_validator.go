@@ -2,6 +2,7 @@ package networking
 
 import (
 	"context"
+	"fmt"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/go-logr/logr"
@@ -22,8 +23,10 @@ const (
 )
 
 // NewIngressValidator returns a validator for Ingress API.
-func NewIngressValidator(client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
+func NewIngressValidator(modelBuilder ingress.ModelBuilder, groupLoader ingress.GroupLoader, client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
 	return &ingressValidator{
+		modelBuilder:                  modelBuilder,
+		groupLoader:                   groupLoader,
 		annotationParser:              annotations.NewSuffixAnnotationParser(annotations.AnnotationPrefixIngress),
 		classAnnotationMatcher:        ingress.NewDefaultClassAnnotationMatcher(ingConfig.IngressClass),
 		classLoader:                   ingress.NewDefaultClassLoader(client),
@@ -36,6 +39,8 @@ func NewIngressValidator(client client.Client, ingConfig config.IngressConfig, l
 var _ webhook.Validator = &ingressValidator{}
 
 type ingressValidator struct {
+	modelBuilder                  ingress.ModelBuilder
+	groupLoader                   ingress.GroupLoader
 	annotationParser              annotations.Parser
 	classAnnotationMatcher        ingress.ClassAnnotationMatcher
 	classLoader                   ingress.ClassLoader
@@ -74,6 +79,45 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	if err := v.checkIngressClassUsage(ctx, ing, oldIng); err != nil {
 		return err
 	}
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+
+	ingGroupID, _ := v.groupLoader.LoadGroupIDIfAny(ctx, ing)
+	ingGroup, _ := v.groupLoader.Load(ctx, *ingGroupID)
+	fmt.Println(ingGroup)
+	fmt.Println("222222")
+	//ingGroupID1, _ := v.groupLoader.LoadGroupIDIfAny(ctx, oldIng)
+	//ingGroup1, _ := v.groupLoader.Load(ctx, *ingGroupID1)
+	for _, member := range ingGroup.Members {
+		fmt.Println("errererrerere")
+		fmt.Println(member.Ing.Annotations)
+
+		member.Ing.Annotations = ing.Annotations
+	}
+	fmt.Println("changed               changded")
+	stack, lb, secrets, err := v.modelBuilder.Build(ctx, ingGroup)
+	fmt.Println("stack", stack)
+	fmt.Println("lb", lb)
+	fmt.Println("secrets", secrets)
+	fmt.Println("err", err)
+
+	fmt.Println(ingGroup)
+	fmt.Println("test")
+	fmt.Println(*lb.Spec.Scheme)
+
+	fmt.Println("1111111111111111222")
+
+	//fmt.Println(ing.Annotations)
+	fmt.Println("11111111111111112222")
+
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+	fmt.Println("1111111111111111")
+
 	return nil
 }
 

@@ -86,6 +86,14 @@ func NewGroupReconciler(cloud aws.Cloud, k8sClient client.Client, eventRecorder 
 	}
 }
 
+func (r *groupReconciler) GetModelBuilder() ingress.ModelBuilder {
+	return r.modelBuilder
+}
+
+func (r *groupReconciler) GetGroupLoader() ingress.GroupLoader {
+	return r.groupLoader
+}
+
 // GroupReconciler reconciles a IngressGroup
 type groupReconciler struct {
 	k8sClient         client.Client
