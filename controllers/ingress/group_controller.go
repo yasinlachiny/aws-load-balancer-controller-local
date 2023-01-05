@@ -3,6 +3,7 @@ package ingress
 import (
 	"context"
 	"fmt"
+
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -82,6 +83,14 @@ func NewGroupReconciler(cloud aws.Cloud, k8sClient client.Client, eventRecorder 
 
 		maxConcurrentReconciles: controllerConfig.IngressConfig.MaxConcurrentReconciles,
 	}
+}
+
+func (r *groupReconciler) GetModelBuilder() ingress.ModelBuilder {
+	return r.modelBuilder
+}
+
+func (r *groupReconciler) GetGroupLoader() ingress.GroupLoader {
+	return r.groupLoader
 }
 
 // GroupReconciler reconciles a IngressGroup

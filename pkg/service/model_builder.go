@@ -2,10 +2,12 @@ package service
 
 import (
 	"context"
-	"github.com/pkg/errors"
-	"k8s.io/apimachinery/pkg/util/sets"
+	"fmt"
 	"strconv"
 	"sync"
+
+	"github.com/pkg/errors"
+	"k8s.io/apimachinery/pkg/util/sets"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	corev1 "k8s.io/api/core/v1"
@@ -120,6 +122,17 @@ func (b *defaultModelBuilder) Build(ctx context.Context, service *corev1.Service
 		defaultHealthCheckHealthyThresholdForInstanceModeLocal:   2,
 		defaultHealthCheckUnhealthyThresholdForInstanceModeLocal: 2,
 	}
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("Build mode modelmodemopdedellldedle modelmodelqazqaz")
 
 	if err := task.run(ctx); err != nil {
 		return nil, nil, err

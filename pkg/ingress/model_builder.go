@@ -2,6 +2,9 @@ package ingress
 
 import (
 	"context"
+	"fmt"
+	"strconv"
+
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	elbv2sdk "github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/go-logr/logr"
@@ -21,7 +24,6 @@ import (
 	elbv2model "sigs.k8s.io/aws-load-balancer-controller/pkg/model/elbv2"
 	networkingpkg "sigs.k8s.io/aws-load-balancer-controller/pkg/networking"
 	"sigs.k8s.io/controller-runtime/pkg/client"
-	"strconv"
 )
 
 const (
@@ -152,6 +154,12 @@ func (b *defaultModelBuilder) Build(ctx context.Context, ingGroup Group) (core.S
 	if err := task.run(ctx); err != nil {
 		return nil, nil, nil, err
 	}
+	fmt.Println("qweqweqweq")
+	fmt.Println("qweqwe")
+	fmt.Println("qweqwe")
+	fmt.Println("qwe mode modelmodemopdedellldedle modelmodelqazqaz")
+	fmt.Println("qweqweqw mode modelmodemopdedellldedle modelmodelqazqaz")
+
 	return task.stack, task.loadBalancer, task.secretKeys, nil
 }
 

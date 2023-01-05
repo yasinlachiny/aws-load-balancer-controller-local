@@ -117,6 +117,21 @@ func (t *defaultModelBuildTask) buildLoadBalancerScheme(ctx context.Context) (el
 
 func (t *defaultModelBuildTask) buildLoadBalancerSchemeViaAnnotation(ctx context.Context) (elbv2model.LoadBalancerScheme, bool, error) {
 	rawScheme := ""
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+
+	fmt.Println(t.service.Annotations)
+
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+	fmt.Println("yahoooooooo")
+
 	if exists := t.annotationParser.ParseStringAnnotation(annotations.SvcLBSuffixScheme, &rawScheme, t.service.Annotations); exists {
 		switch rawScheme {
 		case string(elbv2model.LoadBalancerSchemeInternetFacing):
