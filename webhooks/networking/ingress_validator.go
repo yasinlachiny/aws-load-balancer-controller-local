@@ -5,12 +5,15 @@ import (
 	"fmt"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
+	elbv2sdk "github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/annotations"
+	"sigs.k8s.io/aws-load-balancer-controller/pkg/aws/services"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/config"
+	elbv2deploy "sigs.k8s.io/aws-load-balancer-controller/pkg/deploy/elbv2"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/ingress"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/webhook"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -23,7 +26,7 @@ const (
 )
 
 // NewIngressValidator returns a validator for Ingress API.
-func NewIngressValidator(modelBuilder ingress.ModelBuilder, groupLoader ingress.GroupLoader, client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
+func NewIngressValidator(elbv2Client services.ELBV2, modelBuilder ingress.ModelBuilder, groupLoader ingress.GroupLoader, client client.Client, ingConfig config.IngressConfig, logger logr.Logger) *ingressValidator {
 	return &ingressValidator{
 		modelBuilder:                  modelBuilder,
 		groupLoader:                   groupLoader,
@@ -33,12 +36,15 @@ func NewIngressValidator(modelBuilder ingress.ModelBuilder, groupLoader ingress.
 		disableIngressClassAnnotation: ingConfig.DisableIngressClassAnnotation,
 		disableIngressGroupAnnotation: ingConfig.DisableIngressGroupNameAnnotation,
 		logger:                        logger,
+		elbv2Client:                   elbv2Client,
 	}
 }
 
 var _ webhook.Validator = &ingressValidator{}
 
 type ingressValidator struct {
+	elbv2Client services.ELBV2
+
 	modelBuilder                  ingress.ModelBuilder
 	groupLoader                   ingress.GroupLoader
 	annotationParser              annotations.Parser
@@ -97,6 +103,8 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	}
 	fmt.Println("changed               changded")
 	stack, lb, secrets, err := v.modelBuilder.Build(ctx, ingGroup)
+	fmt.Println("vvvvvvvvvvvv", v.modelBuilder.ELBV2TaggingManager())
+
 	fmt.Println("stack", stack)
 	fmt.Println("lb", lb)
 	fmt.Println("secrets", secrets)
@@ -105,7 +113,11 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	fmt.Println(ingGroup)
 	fmt.Println("test")
 	fmt.Println(*lb.Spec.Scheme)
+	req := &elbv2sdk.DescribeLoadBalancersInput{}
 
+	lbs, err := v.elbv2Client.DescribeLoadBalancersAsList(ctx, req)
+	fmt.Println("lbs2", lbs)
+	elbv2deploy.IsSDKLoadBalancerRequiresReplacement(lbs, lb)
 	fmt.Println("1111111111111111222")
 
 	//fmt.Println(ing.Annotations)
