@@ -34,6 +34,7 @@ const (
 type ModelBuilder interface {
 	// build mode stack for a IngressGroup.
 	Build(ctx context.Context, ingGroup Group) (core.Stack, *elbv2model.LoadBalancer, []types.NamespacedName, error)
+	ELBV2TaggingManager() elbv2deploy.TaggingManager
 }
 
 // NewDefaultModelBuilder constructs new defaultModelBuilder.
@@ -101,6 +102,10 @@ type defaultModelBuilder struct {
 	enableIPTargetType       bool
 
 	logger logr.Logger
+}
+
+func (b *defaultModelBuilder) ELBV2TaggingManager() elbv2deploy.TaggingManager {
+	return b.elbv2TaggingManager
 }
 
 // build mode stack for a IngressGroup.

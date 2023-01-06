@@ -118,6 +118,14 @@ func (s *loadBalancerSynthesizer) findSDKLoadBalancers(ctx context.Context) ([]L
 		tracking.TagsAsTagFilter(stackTagsLegacy))
 }
 
+func (s *loadBalancerSynthesizer) FindSDKLoadBalancers(ctx context.Context) ([]LoadBalancerWithTags, error) {
+	stackTags := s.trackingProvider.StackTags(s.stack)
+	stackTagsLegacy := s.trackingProvider.StackTagsLegacy(s.stack)
+	return s.taggingManager.ListLoadBalancers(ctx,
+		tracking.TagsAsTagFilter(stackTags),
+		tracking.TagsAsTagFilter(stackTagsLegacy))
+}
+
 type resAndSDKLoadBalancerPair struct {
 	resLB *elbv2model.LoadBalancer
 	sdkLB LoadBalancerWithTags
@@ -188,6 +196,15 @@ func mapSDKLoadBalancerByResourceID(sdkLBs []LoadBalancerWithTags, resourceIDTag
 
 // isSDKLoadBalancerRequiresReplacement checks whether a sdk LoadBalancer requires replacement to fulfill a LoadBalancer resource.
 func isSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elbv2model.LoadBalancer) bool {
+	if string(resLB.Spec.Type) != awssdk.StringValue(sdkLB.LoadBalancer.Type) {
+		return true
+	}
+	if resLB.Spec.Scheme != nil && string(*resLB.Spec.Scheme) != awssdk.StringValue(sdkLB.LoadBalancer.Scheme) {
+		return true
+	}
+	return false
+}
+func IsSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elbv2model.LoadBalancer) bool {
 	if string(resLB.Spec.Type) != awssdk.StringValue(sdkLB.LoadBalancer.Type) {
 		return true
 	}
