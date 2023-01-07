@@ -85,9 +85,6 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	if err := v.checkIngressClassUsage(ctx, ing, oldIng); err != nil {
 		return err
 	}
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
 
 	ingGroupID, _ := v.groupLoader.LoadGroupIDIfAny(ctx, ing)
 	ingGroup, _ := v.groupLoader.Load(ctx, *ingGroupID)
@@ -103,7 +100,6 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	}
 	fmt.Println("changed               changded")
 	stack, lb, secrets, err := v.modelBuilder.Build(ctx, ingGroup)
-	fmt.Println("vvvvvvvvvvvv", v.modelBuilder.ELBV2TaggingManager())
 
 	fmt.Println("stack", stack)
 	fmt.Println("lb", lb)
@@ -117,18 +113,15 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 
 	lbs, err := v.elbv2Client.DescribeLoadBalancersAsList(ctx, req)
 	fmt.Println("lbs2", lbs)
-	elbv2deploy.IsSDKLoadBalancerRequiresReplacement(lbs, lb)
-	fmt.Println("1111111111111111222")
 
+	track, err := v.modelBuilder.FetchExistingLoadBalancer(ctx, stack)
+
+	fmt.Println("track11", track)
+	if track != nil {
+		fmt.Println("isneedreplcae", elbv2deploy.IsSDKLoadBalancerRequiresReplacement(*track, lb))
+		fmt.Println("33333")
+	}
 	//fmt.Println(ing.Annotations)
-	fmt.Println("11111111111111112222")
-
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
-	fmt.Println("1111111111111111")
 
 	return nil
 }

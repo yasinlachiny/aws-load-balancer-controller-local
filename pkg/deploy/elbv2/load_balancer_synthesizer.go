@@ -118,14 +118,6 @@ func (s *loadBalancerSynthesizer) findSDKLoadBalancers(ctx context.Context) ([]L
 		tracking.TagsAsTagFilter(stackTagsLegacy))
 }
 
-func (s *loadBalancerSynthesizer) FindSDKLoadBalancers(ctx context.Context) ([]LoadBalancerWithTags, error) {
-	stackTags := s.trackingProvider.StackTags(s.stack)
-	stackTagsLegacy := s.trackingProvider.StackTagsLegacy(s.stack)
-	return s.taggingManager.ListLoadBalancers(ctx,
-		tracking.TagsAsTagFilter(stackTags),
-		tracking.TagsAsTagFilter(stackTagsLegacy))
-}
-
 type resAndSDKLoadBalancerPair struct {
 	resLB *elbv2model.LoadBalancer
 	sdkLB LoadBalancerWithTags
