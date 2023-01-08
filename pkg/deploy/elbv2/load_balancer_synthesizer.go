@@ -2,6 +2,7 @@ package elbv2
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
@@ -194,5 +195,6 @@ func isSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elb
 	if resLB.Spec.Scheme != nil && string(*resLB.Spec.Scheme) != awssdk.StringValue(sdkLB.LoadBalancer.Scheme) {
 		return true
 	}
+	fmt.Println("11228")
 	return false
 }

@@ -81,7 +81,7 @@ func (m *defaultGroupLoader) Load(ctx context.Context, groupID GroupID) (Group, 
 	if err := m.client.List(ctx, ingList); err != nil {
 		return Group{}, err
 	}
-
+	fmt.Println("group loading 123")
 	var members []ClassifiedIngress
 	var inactiveMembers []*networking.Ingress
 	for index := range ingList.Items {
@@ -141,6 +141,7 @@ const (
 func (m *defaultGroupLoader) checkGroupMembershipType(ctx context.Context, groupID GroupID, ing *networking.Ingress) (groupMembershipType, ClassifiedIngress, error) {
 	groupFinalizer := buildGroupFinalizer(groupID)
 	hasGroupFinalizer := m.containsGroupFinalizer(groupID, groupFinalizer, ing)
+	fmt.Println("checkgroup 123123")
 	classifiedIng, ingGroupID, err := m.loadGroupIDIfAnyHelper(ctx, ing)
 	if err != nil {
 		// tolerate ErrInvalidIngressClass for Ingresses that hasn't belongs to the group yet.
@@ -177,6 +178,7 @@ func (m *defaultGroupLoader) loadGroupIDIfAnyHelper(ctx context.Context, ing *ne
 	if !ing.DeletionTimestamp.IsZero() {
 		return ClassifiedIngress{}, nil, nil
 	}
+	fmt.Println("lo")
 	classifiedIngress, matchesIngressClass, err := m.classifyIngress(ctx, ing)
 	if err != nil {
 		return ClassifiedIngress{}, nil, err
@@ -207,26 +209,19 @@ func (m *defaultGroupLoader) classifyIngress(ctx context.Context, ing *networkin
 			IngClassConfig: ClassConfiguration{},
 		}, false, nil
 	}
+	ingClassConfig, err := m.classLoader.Load(ctx, ing)
+	if err != nil {
+		return ClassifiedIngress{
+			Ing:            ing,
+			IngClassConfig: ClassConfiguration{},
+		}, false, err
+	}
 
-	if ing.Spec.IngressClassName != nil {
-		ingClassConfig, err := m.classLoader.Load(ctx, ing)
-		if err != nil {
-			return ClassifiedIngress{
-				Ing:            ing,
-				IngClassConfig: ClassConfiguration{},
-			}, false, err
-		}
-
-		if matchesIngressClass := ingClassConfig.IngClass != nil && ingClassConfig.IngClass.Spec.Controller == ingressClassControllerALB; matchesIngressClass {
-			return ClassifiedIngress{
-				Ing:            ing,
-				IngClassConfig: ingClassConfig,
-			}, true, nil
-		}
+	if matchesIngressClass := ingClassConfig.IngClass != nil && ingClassConfig.IngClass.Spec.Controller == ingressClassControllerALB; matchesIngressClass {
 		return ClassifiedIngress{
 			Ing:            ing,
 			IngClassConfig: ingClassConfig,
-		}, false, nil
+		}, true, nil
 	}
 
 	return ClassifiedIngress{
