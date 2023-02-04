@@ -2,6 +2,7 @@ package networking
 
 import (
 	"context"
+	"fmt"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	"github.com/go-logr/logr"
@@ -21,7 +22,6 @@ const (
 	apiPathValidateNetworkingIngress = "/validate-networking-v1-ingress"
 	lbAttrsDeletionProtectionEnabled = "deletion_protection.enabled"
 	schemDefault                     = "internal"
-	defaultIngressClass              = "alb"
 )
 
 // NewIngressValidator returns a validator for Ingress API.
@@ -80,14 +80,24 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	if err := v.validateDeletionProtectionAnnotation(ctx, ing, oldIng); err != nil {
 		return err
 	}
+
 	return nil
 }
 
 func (v *ingressValidator) validateDeletionProtectionAnnotation(ctx context.Context, ing *networking.Ingress, oldIng *networking.Ingress) error {
 	// Get the values of the "alb.ingress.kubernetes.io/scheme" and "alb.ingress.kubernetes.io/ingress.class" annotations for the old and new Ingress objects
+	defaultIngressClass, err := v.classLoader.GetDefaultIngressClass(ctx)
+	if err != nil {
+		return err
+	}
+	fmt.Println(defaultIngressClass)
+	fmt.Println(defaultIngressClass)
+	fmt.Println("test")
+
 	ingClass := defaultIngressClass
 	oldIngClass := defaultIngressClass
-
+	fmt.Println(ingClass)
+	fmt.Println(oldIngClass)
 	if value, ok := ing.Annotations[annotations.IngressClass]; ok {
 		ingClass = value
 	}
@@ -107,17 +117,17 @@ func (v *ingressValidator) validateDeletionProtectionAnnotation(ctx context.Cont
 		rawSchema = schemDefault
 	}
 
-	// Check if the scheme or type of the load balancer changed in the new Ingress object
-	if rawSchemaold != rawSchema || ingClass != oldIngClass {
-		// Check if the Ingress object had the deletion protection annotation enabled
-		enabled, err := v.getDeletionProtectionEnabled(ing)
-		if err != nil {
-			return err
-		}
-		if enabled == "true" {
-			return errors.Errorf("cannot change the scheme or type of ingress %s/%s with deletion protection enabled", ing.Namespace, ing.Name)
-		}
-	}
+	// // Check if the scheme or type of the load balancer changed in the new Ingress object
+	// if rawSchemaold != rawSchema || ingClass != oldIngClass {
+	// 	// Check if the Ingress object had the deletion protection annotation enabled
+	// 	enabled, err := v.getDeletionProtectionEnabled(ing)
+	// 	if err != nil {
+	// 		return err
+	// 	}
+	// 	if enabled == "true" {
+	// 		return errors.Errorf("cannot change the scheme or type of ingress %s/%s with deletion protection enabled", ing.Namespace, ing.Name)
+	// 	}
+	// }
 	return nil
 }
 

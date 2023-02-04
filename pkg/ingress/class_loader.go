@@ -32,6 +32,8 @@ var ErrInvalidIngressClass = errors.New("invalid ingress class")
 type ClassLoader interface {
 	// Load loads the ClassConfiguration for Ingress with IngressClassName.
 	Load(ctx context.Context, ing *networking.Ingress) (ClassConfiguration, error)
+	// GetDefaultIngressClass returns the default IngressClass from the list of IngressClasses.
+	GetDefaultIngressClass(ctx context.Context) (string, error)
 }
 
 // NewDefaultClassLoader constructs new defaultClassLoader instance.
