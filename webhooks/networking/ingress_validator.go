@@ -95,12 +95,14 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	fmt.Println("222222")
 	//ingGroupID1, _ := v.groupLoader.LoadGroupIDIfAny(ctx, oldIng)
 	//ingGroup1, _ := v.groupLoader.Load(ctx, *ingGroupID1)
+
 	for _, member := range ingGroup.Members {
 		fmt.Println("errererrerere")
 		fmt.Println(member.Ing.Annotations)
 
 		member.Ing.Annotations = ing.Annotations
 	}
+
 	fmt.Println("changed               changded")
 	stack, lb, secrets, err := v.modelBuilder.Build(ctx, ingGroup)
 
@@ -111,7 +113,7 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 
 	fmt.Println(ingGroup)
 	fmt.Println("test")
-	fmt.Println(*lb.Spec.Scheme)
+	//fmt.Println(*lb.Spec.Scheme)
 	req := &elbv2sdk.DescribeLoadBalancersInput{}
 
 	lbs, err := v.elbv2Client.DescribeLoadBalancersAsList(ctx, req)

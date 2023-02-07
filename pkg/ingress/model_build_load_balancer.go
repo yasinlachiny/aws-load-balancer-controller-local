@@ -124,26 +124,8 @@ func (t *defaultModelBuildTask) buildLoadBalancerName(_ context.Context, scheme 
 }
 
 func (t *defaultModelBuildTask) buildLoadBalancerScheme(_ context.Context) (elbv2model.LoadBalancerScheme, error) {
-	fmt.Println("yooooyoooooyyooo")
-	fmt.Println("yooooyoooooyyooo")
-
-	fmt.Println("yooooyoooooyyooo")
-
-	fmt.Println("yooooyoooooyyooo")
-	fmt.Println("yooooyoooooyyooo")
-
-	fmt.Println("yooooyoooooyyooo")
-	fmt.Println("yooooyoooooyyooo")
-	fmt.Println("yooooyoooooyyooo")
-	fmt.Println("yooooyoooooyyooo")
-	fmt.Println("yooooyoooooyyooo")
-
 	explicitSchemes := sets.String{}
 	for _, member := range t.ingGroup.Members {
-		fmt.Println("yooooyoooooyyooo")
-		fmt.Println(member.Ing.Annotations)
-		fmt.Println("yooooyoooooyyooo")
-		fmt.Println("yooooyoooooyyooo")
 		if member.IngClassConfig.IngClassParams != nil && member.IngClassConfig.IngClassParams.Spec.Scheme != nil {
 			scheme := string(*member.IngClassConfig.IngClassParams.Spec.Scheme)
 			explicitSchemes.Insert(scheme)

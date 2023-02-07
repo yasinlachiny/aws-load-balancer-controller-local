@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strconv"
-	"sync"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	elbv2sdk "github.com/aws/aws-sdk-go/service/elbv2"
@@ -35,8 +34,6 @@ const (
 type ModelBuilder interface {
 	// build mode stack for a IngressGroup.
 	Build(ctx context.Context, ingGroup Group) (core.Stack, *elbv2model.LoadBalancer, []types.NamespacedName, error)
-	ELBV2TaggingManager() elbv2deploy.TaggingManager
-	GetTrackingProvider() tracking.Provider
 	FetchExistingLoadBalancer(ctx context.Context, stack core.Stack) (*elbv2deploy.LoadBalancerWithTags, error)
 }
 
@@ -76,10 +73,6 @@ func NewDefaultModelBuilder(k8sClient client.Client, eventRecorder record.EventR
 	}
 }
 
-func (b *defaultModelBuilder) GetTrackingProvider() tracking.Provider {
-	return b.trackingProvider
-}
-
 var _ ModelBuilder = &defaultModelBuilder{}
 
 // default implementation for ModelBuilder
@@ -107,41 +100,9 @@ type defaultModelBuilder struct {
 	enableBackendSG          bool
 	disableRestrictedSGRules bool
 	enableIPTargetType       bool
+	existingLoadBalancer     *elbv2deploy.LoadBalancerWithTags
 
-	logger                        logr.Logger
-	fetchExistingLoadBalancerOnce sync.Once
-	existingLoadBalancer          *elbv2deploy.LoadBalancerWithTags
-}
-
-// func (s *loadBalancerSynthesizer) FindSDKLoadBalancers(ctx context.Context) ([]LoadBalancerWithTags, error) {
-// stackTags := s.trackingProvider.StackTags(s.stack)
-// stackTagsLegacy := s.trackingProvider.StackTagsLegacy(s.stack)
-// return s.taggingManager.ListLoadBalancers(ctx,
-// tracking.TagsAsTagFilter(stackTags),
-// tracking.TagsAsTagFilter(stackTagsLegacy))
-// }
-func (b *defaultModelBuilder) FetchExistingLoadBalancer(ctx context.Context, stack core.Stack) (*elbv2deploy.LoadBalancerWithTags, error) {
-	var fetchError error
-
-	stackTags := b.trackingProvider.StackTags(stack)
-	fmt.Println("stacktags1")
-	fmt.Println(stackTags)
-	sdkLBs, err := b.elbv2TaggingManager.ListLoadBalancers(ctx, tracking.TagsAsTagFilter(stackTags))
-	fmt.Println(sdkLBs, "sdkLBs1")
-
-	if err != nil {
-		fetchError = err
-	}
-	if len(sdkLBs) == 0 {
-		b.existingLoadBalancer = nil
-	} else {
-		b.existingLoadBalancer = &sdkLBs[0]
-	}
-	return b.existingLoadBalancer, fetchError
-}
-
-func (b *defaultModelBuilder) ELBV2TaggingManager() elbv2deploy.TaggingManager {
-	return b.elbv2TaggingManager
+	logger logr.Logger
 }
 
 // build mode stack for a IngressGroup.
@@ -195,12 +156,6 @@ func (b *defaultModelBuilder) Build(ctx context.Context, ingGroup Group) (core.S
 	if err := task.run(ctx); err != nil {
 		return nil, nil, nil, err
 	}
-	fmt.Println("qweqweqweq")
-	fmt.Println("qweqwe")
-	fmt.Println("qweqwe")
-	fmt.Println("qwe mode modelmodemopdedellldedle modelmodelqazqaz")
-	fmt.Println("qweqweqw mode modelmodemopdedellldedle modelmodelqazqaz")
-
 	return task.stack, task.loadBalancer, task.secretKeys, nil
 }
 
@@ -473,4 +428,24 @@ func (t *defaultModelBuildTask) buildManageSecurityGroupRulesFlag(_ context.Cont
 type listenPortConfigWithIngress struct {
 	ingKey           types.NamespacedName
 	listenPortConfig listenPortConfig
+}
+
+func (b *defaultModelBuilder) FetchExistingLoadBalancer(ctx context.Context, stack core.Stack) (*elbv2deploy.LoadBalancerWithTags, error) {
+	var fetchError error
+
+	stackTags := b.trackingProvider.StackTags(stack)
+	fmt.Println("stacktags1")
+	fmt.Println(stackTags)
+	sdkLBs, err := b.elbv2TaggingManager.ListLoadBalancers(ctx, tracking.TagsAsTagFilter(stackTags))
+	fmt.Println(sdkLBs, "sdkLBs1")
+
+	if err != nil {
+		fetchError = err
+	}
+	if len(sdkLBs) == 0 {
+		b.existingLoadBalancer = nil
+	} else {
+		b.existingLoadBalancer = &sdkLBs[0]
+	}
+	return b.existingLoadBalancer, fetchError
 }
