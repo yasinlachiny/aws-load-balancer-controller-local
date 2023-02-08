@@ -2,6 +2,7 @@ package elbv2
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
@@ -196,6 +197,9 @@ func mapSDKLoadBalancerByResourceID(sdkLBs []LoadBalancerWithTags, resourceIDTag
 
 // isSDKLoadBalancerRequiresReplacement checks whether a sdk LoadBalancer requires replacement to fulfill a LoadBalancer resource.
 func isSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elbv2model.LoadBalancer) bool {
+	fmt.Println("reslb1", *resLB.Spec.Scheme)
+	fmt.Println("stringgg", string(*resLB.Spec.Scheme))
+	fmt.Println("skdd", awssdk.StringValue(sdkLB.LoadBalancer.Scheme))
 	if string(resLB.Spec.Type) != awssdk.StringValue(sdkLB.LoadBalancer.Type) {
 		return true
 	}
@@ -205,6 +209,10 @@ func isSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elb
 	return false
 }
 func IsSDKLoadBalancerRequiresReplacement(sdkLB LoadBalancerWithTags, resLB *elbv2model.LoadBalancer) bool {
+	fmt.Println("reslb122", *resLB.Spec.Scheme)
+	fmt.Println("stringgg22", string(*resLB.Spec.Scheme))
+	fmt.Println("skdd22", awssdk.StringValue(sdkLB.LoadBalancer.Scheme))
+
 	if string(resLB.Spec.Type) != awssdk.StringValue(sdkLB.LoadBalancer.Type) {
 		return true
 	}

@@ -6,14 +6,16 @@ import (
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
 	elbv2sdk "github.com/aws/aws-sdk-go/service/elbv2"
+
 	"github.com/go-logr/logr"
 	"github.com/pkg/errors"
 	networking "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/annotations"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/aws/services"
-	"sigs.k8s.io/aws-load-balancer-controller/pkg/config"
 	elbv2deploy "sigs.k8s.io/aws-load-balancer-controller/pkg/deploy/elbv2"
+
+	"sigs.k8s.io/aws-load-balancer-controller/pkg/config"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/ingress"
 	"sigs.k8s.io/aws-load-balancer-controller/pkg/webhook"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -89,14 +91,23 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	fmt.Println("1111111111111111")
 	fmt.Println("1111111111111111")
 
-	ingGroupID, _ := v.groupLoader.LoadGroupIDIfAny(ctx, ing)
-	ingGroup, _ := v.groupLoader.Load(ctx, *ingGroupID)
-	fmt.Println(ingGroup)
+	ingGroupID, err := v.groupLoader.LoadGroupIDIfAny(ctx, ing)
+	fmt.Println("grperrrr1", err)
+	fmt.Println("ingGroupID11", ingGroupID)
+
+	ingGroup, err := v.groupLoader.Load(ctx, *ingGroupID)
+	fmt.Println("grperrrr2", err)
+	fmt.Println("ingGroup1", ingGroup)
+
+	fmt.Println("ingggtpo", ingGroup)
 	fmt.Println("222222")
 	//ingGroupID1, _ := v.groupLoader.LoadGroupIDIfAny(ctx, oldIng)
 	//ingGroup1, _ := v.groupLoader.Load(ctx, *ingGroupID1)
 
 	for _, member := range ingGroup.Members {
+		// if member.IngClassConfig.IngClassParams != nil {
+		//    member.IngClassConfig.IngClass = ing.I
+		// }
 		fmt.Println("errererrerere")
 		fmt.Println(member.Ing.Annotations)
 
@@ -105,15 +116,17 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 
 	fmt.Println("changed               changded")
 	stack, lb, secrets, err := v.modelBuilder.Build(ctx, ingGroup)
-
-	fmt.Println("stack", stack)
-	fmt.Println("lb", lb)
-	fmt.Println("secrets", secrets)
-	fmt.Println("err", err)
+	if err != nil {
+		return err
+	}
+	fmt.Println("stack12", stack)
+	fmt.Println("lb12", lb)
+	fmt.Println("secrets12", secrets)
+	fmt.Println("err12", err)
 
 	fmt.Println(ingGroup)
 	fmt.Println("test")
-	//fmt.Println(*lb.Spec.Scheme)
+	fmt.Println(*lb.Spec.Scheme)
 	req := &elbv2sdk.DescribeLoadBalancersInput{}
 
 	lbs, err := v.elbv2Client.DescribeLoadBalancersAsList(ctx, req)
@@ -128,7 +141,9 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	}
 	//fmt.Println(ing.Annotations)
 	fmt.Println("11111111111111112222")
-
+	test123, err := v.classLoader.Load(ctx, ing)
+	fmt.Println("tterr", test123)
+	fmt.Println("ee", err)
 	fmt.Println("1111111111111111")
 	fmt.Println("1111111111111111")
 	fmt.Println("1111111111111111")
