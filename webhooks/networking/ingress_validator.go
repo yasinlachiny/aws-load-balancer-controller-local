@@ -141,8 +141,11 @@ func (v *ingressValidator) ValidateUpdate(ctx context.Context, obj runtime.Objec
 	}
 	//fmt.Println(ing.Annotations)
 	fmt.Println("11111111111111112222")
-	test123, err := v.classLoader.Load(ctx, ing)
-	fmt.Println("tterr", test123)
+	ingClassConfig, err := v.classLoader.Load(ctx, ing)
+	fmt.Println("tterrlcclass", ingClassConfig)
+	fmt.Println("ingofclass", ingClassConfig.IngClassParams.Spec.Scheme)
+
+	fmt.Println("ingofclass123", *ingClassConfig.IngClassParams.Spec.Scheme)
 	fmt.Println("ee", err)
 	fmt.Println("1111111111111111")
 	fmt.Println("1111111111111111")
