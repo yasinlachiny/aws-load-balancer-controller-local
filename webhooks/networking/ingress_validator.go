@@ -2,6 +2,7 @@ package networking
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	awssdk "github.com/aws/aws-sdk-go/aws"
@@ -90,6 +91,7 @@ func (v *ingressValidator) validateDeletionProtectionAnnotation(ctx context.Cont
 	var controllerPartOld, controllerPart string
 	var ingClassConfig ingress.ClassConfiguration
 	var err error
+	fmt.Println("class11", ing.Spec.IngressClassName)
 	// Load the class configuration if the ingress class name is specified
 	if ing.Spec.IngressClassName != nil {
 		ingClassConfig, err = v.classLoader.Load(ctx, ing)
