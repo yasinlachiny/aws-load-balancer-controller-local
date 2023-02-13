@@ -91,71 +91,71 @@ func (v *ingressValidator) validateDeletionProtectionAnnotation(ctx context.Cont
 	var controllerPartOld, controllerPart string
 	var ingClassConfig ingress.ClassConfiguration
 	var err error
-	fmt.Println("class11", ing.Spec.IngressClassName)
-	// Load the class configuration if the ingress class name is specified
-	if ing.Spec.IngressClassName != nil {
+
+	fmt.Println("claaaas", ing.Annotations[annotations.IngressClass])
+	fmt.Println("claaaas123322", ing.Spec.IngressClassName)
+
+	if controller, exists := ing.Annotations[annotations.IngressClass]; exists {
+		// Parse the ingress suffix scheme and ingress class from annotations
+		_ = v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchema, ing.Annotations)
+		controllerPart = controller
+	} else if ing.Spec.IngressClassName != nil {
 		ingClassConfig, err = v.classLoader.Load(ctx, ing)
 		if err != nil {
 			return err
 		}
-		rawSchema = string(*ingClassConfig.IngClassParams.Spec.Scheme)
+		if ingClassConfig.IngClassParams != nil && ingClassConfig.IngClassParams.Spec.Scheme != nil {
+			rawSchema = string(*ingClassConfig.IngClassParams.Spec.Scheme)
+		} else {
+			_ = v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchema, ing.Annotations)
+		}
 		controller := ingClassConfig.IngClass.Spec.Controller
 		controllerPart = strings.Split(controller, "/")[1]
-	} else {
-		// Parse the ingress suffix scheme and ingress class from annotations
-		_ = v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchema, ing.Annotations)
-		controllerPart = ing.Annotations[annotations.IngressClass]
 	}
 	// Use default scheme if no scheme is specified
 	if rawSchema == "" {
 		rawSchema = defaultScheme
 	}
-	// Use default controller if no controller is specified
-	if controllerPart == "" {
-		ingClassConfig, err = v.classLoader.Load(ctx, ing)
-		if err != nil {
-			return err
-		}
-		controller := ingClassConfig.IngClass.Spec.Controller
-		controllerPart = strings.Split(controller, "/")[1]
-	}
-
-	if oldIng.Spec.IngressClassName != nil {
+	if controllerOld, exists := oldIng.Annotations[annotations.IngressClass]; exists {
+		// Parse the ingress suffix scheme and ingress class from annotations
+		_ = v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchema, ing.Annotations)
+		controllerPart = controllerOld
+	} else if oldIng.Spec.IngressClassName != nil {
 		oldIngClassConfig, err := v.classLoader.Load(ctx, oldIng)
 		if err != nil {
 			return err
 		}
-		rawSchemaOld = string(*oldIngClassConfig.IngClassParams.Spec.Scheme)
+		if oldIngClassConfig.IngClassParams != nil && oldIngClassConfig.IngClassParams.Spec.Scheme != nil {
+			rawSchemaOld = string(*ingClassConfig.IngClassParams.Spec.Scheme)
+		} else {
+			_ = v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchemaOld, oldIng.Annotations)
+		}
 		controllerOld := oldIngClassConfig.IngClass.Spec.Controller
 		controllerPartOld = strings.Split(controllerOld, "/")[1]
-	} else {
-		_ = v.annotationParser.ParseStringAnnotation(annotations.IngressSuffixScheme, &rawSchemaOld, oldIng.Annotations)
-		controllerPartOld = oldIng.Annotations[annotations.IngressClass]
 	}
 	// Use default scheme if no scheme is specified
 	if rawSchemaOld == "" {
 		rawSchemaOld = defaultScheme
 	}
-
-	// Use default controller if no controller is specified
-	if controllerPartOld == "" {
-		oldIngClassConfig, err := v.classLoader.Load(ctx, ing)
-		if err != nil {
-			return err
-		}
-		controllerOld := oldIngClassConfig.IngClass.Spec.Controller
-		controllerPartOld = strings.Split(controllerOld, "/")[1]
-	}
-
+	fmt.Println("schememememe", rawSchemaOld)
+	fmt.Println("schememememe", rawSchema)
 	// Check if the scheme or type of the load balancer changed in the new Ingress object
 	if rawSchemaOld != rawSchema || controllerPart != controllerPartOld {
 		// Check if the Ingress object had the deletion protection annotation enabled
+		fmt.Println("check1")
 		enabled, err := v.getDeletionProtectionEnabled(ing, ingClassConfig)
 		if err != nil {
 			return err
 		}
+		fmt.Println("check6", enabled)
+
 		if enabled == "true" {
-			return errors.Errorf("cannot change the scheme or type of ingress %s/%s with deletion protection enabled", ing.Namespace, ing.Name)
+			fmt.Println("cannot change the scheme or type of ingress")
+			fmt.Println("cannot change the scheme or type of ingress")
+			fmt.Println("cannot change the scheme or type of ingress")
+			fmt.Println("cannot change the scheme or type of ingress")
+
+			//return errors.Errorf("cannot change the scheme or type of ingress %s/%s with deletion protection enabled", ing.Namespace, ing.Name)
 		}
 	}
 	return nil
@@ -164,23 +164,27 @@ func (v *ingressValidator) validateDeletionProtectionAnnotation(ctx context.Cont
 // getDeletionProtectionEnabled extracts the value of the "deletion_protection.enabled" attribute from the "alb.ingress.kubernetes.io/load-balancer-attributes" annotation of the given Ingress object.
 // If the annotation or the attribute is not present, it returns an empty string.
 func (v *ingressValidator) getDeletionProtectionEnabled(ing *networking.Ingress, ingClassConfig ingress.ClassConfiguration) (string, error) {
-	if ing.Spec.IngressClassName != nil {
-		if ingClassConfig.IngClassParams == nil || len(ingClassConfig.IngClassParams.Spec.LoadBalancerAttributes) == 0 {
-			return "", nil
-		}
+	fmt.Println("check2")
+	fmt.Println("check21", ing.Spec.IngressClassName)
+	fmt.Println("check22", ingClassConfig.IngClassParams)
+
+	if ing.Spec.IngressClassName != nil && ingClassConfig.IngClassParams != nil && len(ingClassConfig.IngClassParams.Spec.LoadBalancerAttributes) != 0 {
 		for _, attr := range ingClassConfig.IngClassParams.Spec.LoadBalancerAttributes {
 			if attr.Key == "deletion_protection.enabled" {
 				deletionProtectionEnabled := attr.Value
 				return deletionProtectionEnabled, nil
 			}
 		}
-		return "", nil
 	}
+
 	var lbAttributes map[string]string
+
 	_, err := v.annotationParser.ParseStringMapAnnotation(annotations.IngressSuffixLoadBalancerAttributes, &lbAttributes, ing.Annotations)
 	if err != nil {
 		return "", err
 	}
+	fmt.Println("check5")
+
 	return lbAttributes[lbAttrsDeletionProtectionEnabled], nil
 }
 
